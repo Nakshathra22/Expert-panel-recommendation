@@ -1,0 +1,67 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Replace Faculty{% endblock %}
+{% block page_title %}Choose Replacement Faculty{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width:700px;">
+  <div class="card-header">
+    <h3><i class="fas fa-sync-alt"></i> Select Replacement</h3>
+  </div>
+  <div class="card-body">
+    <div class="alert alert-warning">
+      <i class="fas fa-exclamation-triangle"></i>
+      <div>
+        <b>{{ original_req.faculty.name }}</b> declined the <b>{{ original_req.role }}</b>
+        panel invitation for <b>{{ original_req.course.name }}</b>.
+        {% if original_req.decline_reason %}
+        <br>Reason: "{{ original_req.decline_reason }}"
+        {% endif %}
+      </div>
+    </div>
+
+    <p class="font-bold mb-2">Available {{ original_req.role.capitalize() }} Faculty:</p>
+    <form method="POST">
+      <div style="max-height:450px;overflow-y:auto;">
+        {% for f in candidates %}
+        <label class="faculty-card-pick" style="margin-bottom:10px;">
+          <input type="radio" name="new_faculty_id" value="{{ f.id }}" required>
+          <div style="flex:1;">
+            <div class="flex justify-between items-center">
+              <span class="fcp-name">{{ f.name }}</span>
+              <span class="badge badge-{{ original_req.role }}">{{ original_req.role }}</span>
+            </div>
+            <div class="fcp-meta">
+              {{ f.designation or '' }} &bull; {{ f.department.name }}
+              &bull; {{ f.years_of_experience }} yrs experience
+            </div>
+            <div class="tag-list mt-1">
+              {% for tag in f.expertise_list[:4] %}
+                <span class="tag">{{ tag }}</span>
+              {% endfor %}
+            </div>
+          </div>
+        </label>
+        {% else %}
+        <div class="empty-state">
+          <div class="empty-icon">😕</div>
+          <h3>No candidates available</h3>
+          <p>All eligible faculty have already been invited for this course.</p>
+        </div>
+        {% endfor %}
+      </div>
+      {% if candidates %}
+      <div class="flex gap-2 mt-3">
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-paper-plane"></i> Send Invitation to Selected Faculty
+        </button>
+        <a href="{{ url_for('admin.manage_requests') }}" class="btn btn-outline">Cancel</a>
+      </div>
+      {% else %}
+      <a href="{{ url_for('admin.manage_requests') }}" class="btn btn-outline mt-2">
+        <i class="fas fa-arrow-left"></i> Back
+      </a>
+      {% endif %}
+    </form>
+  </div>
+</div>
+{% endblock %}

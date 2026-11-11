@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Faculty Portal{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="layout">
+  <!-- Faculty Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">🎓</div>
+      <div>
+        <div class="brand-text">Expert Panel</div>
+        <div class="brand-sub">Faculty Portal</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">My Portal</div>
+      <a href="{{ url_for('faculty.dashboard') }}" class="nav-item">
+        <i class="nav-icon fas fa-home"></i> Dashboard
+      </a>
+      <a href="{{ url_for('faculty.profile') }}" class="nav-item">
+        <i class="nav-icon fas fa-user"></i> My Profile
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="text-sm text-muted mb-2" style="opacity:0.6;">
+        {{ current_user.email if current_user.is_authenticated else '' }}
+      </div>
+      <a href="{{ url_for('faculty.logout') }}" class="btn btn-outline" style="width:100%;justify-content:center;">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </a>
+    </div>
+  </aside>
+
+  <!-- Content -->
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+        <p>{% block page_subtitle %}{% endblock %}</p>
+      </div>
+      <div class="topbar-right">
+        <div class="user-badge">
+          <div class="user-avatar" style="background:var(--success);">
+            {{ current_user.name[0].upper() if current_user.is_authenticated else 'F' }}
+          </div>
+          <span class="user-name">{{ current_user.name if current_user.is_authenticated else 'Faculty' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-content">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for cat, msg in messages %}
+          <div class="alert alert-{{ cat }}">
+            <i class="fas fa-info-circle"></i> {{ msg }}
+          </div>
+        {% endfor %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+</div>
+<script>
+const currentPath = window.location.pathname;
+document.querySelectorAll('.nav-item').forEach(item => {
+  if (item.getAttribute('href') === currentPath) item.classList.add('active');
+});
+document.querySelectorAll('.alert').forEach(a => {
+  setTimeout(() => { a.style.opacity='0'; setTimeout(()=>a.remove(),400); }, 4500);
+});
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

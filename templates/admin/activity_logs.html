@@ -1,0 +1,53 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Activity Logs{% endblock %}
+{% block page_title %}Activity Logs{% endblock %}
+{% block page_subtitle %}Full audit trail of all admin actions{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h3><i class="fas fa-history"></i> System Activity Log</h3>
+    <span class="text-muted text-sm">{{ logs.total }} total entries</span>
+  </div>
+  <div class="table-container">
+    <table class="data-table">
+      <thead>
+        <tr><th>#</th><th>Timestamp</th><th>Action</th><th>Details</th><th>IP Address</th></tr>
+      </thead>
+      <tbody>
+        {% for log in logs.items %}
+        <tr>
+          <td>{{ ((logs.page-1)*logs.per_page) + loop.index }}</td>
+          <td class="text-sm text-muted">{{ log.timestamp.strftime('%d %b %Y, %H:%M:%S') }}</td>
+          <td class="font-bold">{{ log.action }}</td>
+          <td class="text-sm">{{ log.details or '—' }}</td>
+          <td class="text-sm text-muted">{{ log.ip_address or '—' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted" style="padding:40px;">No activity logged yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <!-- Pagination -->
+  {% if logs.pages > 1 %}
+  <div class="card-body" style="padding-top:12px;">
+    <div class="pagination">
+      {% if logs.has_prev %}
+      <a href="?page={{ logs.prev_num }}" class="page-link">‹ Prev</a>
+      {% endif %}
+      {% for p in logs.iter_pages(left_edge=2, right_edge=2, left_current=2, right_current=2) %}
+        {% if p %}
+          <a href="?page={{ p }}" class="page-link {% if p == logs.page %}active{% endif %}">{{ p }}</a>
+        {% else %}
+          <span class="page-link" style="cursor:default;">…</span>
+        {% endif %}
+      {% endfor %}
+      {% if logs.has_next %}
+      <a href="?page={{ logs.next_num }}" class="page-link">Next ›</a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

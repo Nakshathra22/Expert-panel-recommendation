@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Landing{% endblock %}
+{% block body %}
+<div class="landing">
+  <div class="landing-card">
+    <div class="landing-logo">🎓</div>
+    <h1>Expert Panel<br>Recommendation System</h1>
+    <p>Streamline your expert panel selection process with automated invitations, real-time tracking, and comprehensive reports.</p>
+    <div class="landing-btns">
+      <a href="{{ url_for('admin.login') }}" class="btn-landing btn-landing-admin">
+        <i class="fas fa-user-shield"></i> Admin Login
+      </a>
+      <a href="{{ url_for('faculty.login') }}" class="btn-landing btn-landing-faculty">
+        <i class="fas fa-chalkboard-teacher"></i> Faculty Login
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

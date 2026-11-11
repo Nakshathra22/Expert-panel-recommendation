@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Respond to Invitation{% endblock %}
+{% block body %}
+<div class="respond-page">
+  <div class="respond-card">
+    {% if status == 'invalid' %}
+      <div class="respond-icon">❌</div>
+      <h2 style="color:var(--danger);">Invalid Link</h2>
+      <p>This invitation link is invalid or has already been used.</p>
+      <a href="{{ url_for('main.index') }}" class="btn btn-outline">Go Home</a>
+
+    {% elif status == 'accepted' %}
+      <div class="respond-icon">✅</div>
+      <h2 style="color:var(--success);">Invitation Accepted!</h2>
+      <p>Thank you for agreeing to serve on the expert panel for:</p>
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="info-label">Course</div>
+          <div class="info-value">{{ req.course.name }}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Your Role</div>
+          <div class="info-value" style="text-transform:capitalize;">{{ req.role }}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Department</div>
+          <div class="info-value">{{ req.course.department.name }}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Semester</div>
+          <div class="info-value">{{ req.course.semester or 'N/A' }}</div>
+        </div>
+      </div>
+      {% if temp_password %}
+      <div class="alert alert-success" style="text-align:left;margin-top:16px;">
+        <div>
+          <b>Your login credentials have been sent to your email.</b><br>
+          Temporary password: <code style="font-size:1.1rem;">{{ temp_password }}</code><br>
+          <small>Please log in and change your password immediately.</small>
+        </div>
+      </div>
+      {% endif %}
+      <a href="{{ url_for('faculty.login') }}" class="btn btn-primary mt-2">
+        <i class="fas fa-sign-in-alt"></i> Login to Portal
+      </a>
+
+    {% elif status == 'declined' %}
+      <div class="respond-icon">❌</div>
+      <h2 style="color:var(--danger);">Invitation Declined</h2>
+      <p>You have declined the invitation for <b>{{ req.course.name }}</b>.<br>
+         The administrator has been notified.</p>
+      <a href="{{ url_for('main.index') }}" class="btn btn-outline mt-2">Go Home</a>
+
+    {% else %}
+      <div class="respond-icon">⏳</div>
+      <h2>Already Responded</h2>
+      <p>This invitation has already been <b>{{ status }}</b>.</p>
+      <a href="{{ url_for('main.index') }}" class="btn btn-outline">Go Home</a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

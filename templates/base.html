@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Expert Panel System{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+{% block body %}{% endblock %}
+<script>
+// Flash message auto-dismiss
+document.querySelectorAll('.alert').forEach(a => {
+  setTimeout(() => { a.style.opacity='0'; a.style.transform='translateY(-10px)'; a.style.transition='all 0.4s'; setTimeout(() => a.remove(), 400); }, 4500);
+});
+// Sidebar toggle (mobile)
+const sidebarToggle = document.getElementById('sidebarToggle');
+const sidebar = document.querySelector('.sidebar');
+if (sidebarToggle && sidebar) {
+  sidebarToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
+}
+// Active nav highlight
+const currentPath = window.location.pathname;
+document.querySelectorAll('.nav-item').forEach(item => {
+  if (item.getAttribute('href') && currentPath.startsWith(item.getAttribute('href'))) {
+    item.classList.add('active');
+  }
+});
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

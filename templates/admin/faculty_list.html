@@ -1,0 +1,141 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Faculty List{% endblock %}
+{% block page_title %}Faculty Management{% endblock %}
+{% block page_subtitle %}View, add, edit and remove faculty members{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <div class="flex items-center gap-3">
+      <h3><i class="fas fa-users"></i> All Faculty</h3>
+      <!-- Department Filter -->
+      <form method="GET" style="display:inline-flex;align-items:center;gap:8px;">
+        <select name="dept" class="form-control" style="padding:6px 12px;font-size:0.85rem;" onchange="this.form.submit()">
+          <option value="all" {% if dept_filter=='all' %}selected{% endif %}>All Departments</option>
+          {% for d in departments %}
+          <option value="{{ d.id }}" {% if dept_filter|string == d.id|string %}selected{% endif %}>{{ d.name }}</option>
+          {% endfor %}
+        </select>
+      </form>
+    </div>
+    <div class="flex gap-2">
+      <!-- Import CSV/Excel -->
+      <button onclick="document.getElementById('importModal').classList.add('active')" class="btn btn-info btn-sm">
+        <i class="fas fa-file-import"></i> Import Dataset
+      </button>
+      <a href="{{ url_for('admin.add_faculty') }}" class="btn btn-primary btn-sm">
+        <i class="fas fa-plus"></i> Add Faculty
+      </a>
+    </div>
+  </div>
+  <div class="table-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Department</th>
+          <th>Designation</th>
+          <th>Experience</th>
+          <th>Expertise</th>
+          <th>Assigned Courses</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for f in faculty %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td class="font-bold">{{ f.name }}</td>
+          <td class="text-sm">{{ f.email }}</td>
+          <td>
+            <span class="badge badge-internal">{{ f.department.short_code }}</span>
+            <span class="text-sm text-muted"> {{ f.department.name }}</span>
+          </td>
+          <td>{{ f.designation or '—' }}</td>
+          <td style="text-align:center;">{{ f.years_of_experience }} yrs</td>
+          <td>
+            <div class="tag-list">
+              {% for tag in f.expertise_list[:3] %}
+                <span class="tag">{{ tag }}</span>
+              {% endfor %}
+              {% if f.expertise_list|length > 3 %}
+                <span class="tag">+{{ f.expertise_list|length - 3 }}</span>
+              {% endif %}
+            </div>
+          </td>
+          <td style="text-align:center;">
+            {% if f.assigned_courses_count >= 2 %}
+              <span class="badge badge-warning" title="Maximum course limit reached">2 / 2 (Max)</span>
+            {% elif f.assigned_courses_count == 1 %}
+              <span class="badge badge-info">1 / 2</span>
+            {% else %}
+              <span class="badge" style="background:#f1f5f9;color:#64748b;">0 / 2</span>
+            {% endif %}
+          </td>
+          <td>
+            <div class="flex gap-2">
+              <a href="{{ url_for('admin.edit_faculty', fid=f.id) }}" class="btn btn-info btn-sm">
+                <i class="fas fa-edit"></i>
+              </a>
+              <form method="POST" action="{{ url_for('admin.delete_faculty', fid=f.id) }}"
+                    onsubmit="return confirm('Remove {{ f.name }}?');">
+                <button type="submit" class="btn btn-danger btn-sm">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8">
+            <div class="empty-state">
+              <div class="empty-icon">👥</div>
+              <h3>No faculty found</h3>
+              <p>Add faculty manually or import from a CSV/Excel file.</p>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Import Modal -->
+<div class="modal-overlay" id="importModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3><i class="fas fa-file-import"></i> Import Faculty Dataset</h3>
+      <button class="modal-close" onclick="document.getElementById('importModal').classList.remove('active')">✕</button>
+    </div>
+    <form method="POST" action="{{ url_for('admin.import_faculty') }}" enctype="multipart/form-data">
+      <div class="modal-body">
+        <div class="alert alert-info">
+          <i class="fas fa-info-circle"></i>
+          Supported columns: <b>name, email, designation, years_of_experience, area_of_expertise, department</b>
+          <br>Supports CSV and Excel (.xlsx) files.
+        </div>
+        <div class="form-group">
+          <label>Select File (CSV or Excel)</label>
+          <input type="file" name="dataset_file" class="form-control" accept=".csv,.xlsx,.xls" required>
+        </div>
+        <div class="form-group">
+          <label>Default Department (if not in file)</label>
+          <input type="text" name="default_dept" class="form-control"
+                 placeholder="e.g. Computer Science">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" id="cancel"
+                onclick="document.getElementById('importModal').classList.remove('active')">Cancel</button>
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-upload"></i> Import
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

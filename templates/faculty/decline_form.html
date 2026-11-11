@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Decline Invitation{% endblock %}
+{% block body %}
+<div class="respond-page">
+  <div class="respond-card" style="text-align:left;max-width:520px;">
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="font-size:50px;">😔</div>
+      <h2>Decline Invitation</h2>
+      <p style="color:var(--text-muted);">
+        You are about to decline the panel invitation for<br>
+        <b>{{ req.course.name }}</b>.
+      </p>
+    </div>
+    <form method="POST" action="{{ url_for('faculty.confirm_decline', token=token) }}">
+      <div class="form-group">
+        <label>Reason for Declining (optional)</label>
+        <textarea name="reason" class="form-control" rows="3"
+                  placeholder="e.g. Schedule conflict, expertise mismatch..."></textarea>
+      </div>
+      <div class="flex gap-2 mt-2" style="justify-content:center;">
+        <button type="submit" class="btn btn-danger">
+          <i class="fas fa-times"></i> Confirm Decline
+        </button>
+        <a href="{{ url_for('faculty.respond_request', token=token, action='accept') }}"
+           class="btn btn-success">
+          <i class="fas fa-check"></i> Actually, Accept
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

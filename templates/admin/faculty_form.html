@@ -1,0 +1,76 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}{{ 'Edit' if action == 'edit' else 'Add' }} Faculty{% endblock %}
+{% block page_title %}{{ 'Edit Faculty' if action == 'edit' else 'Add New Faculty' }}{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width:600px;">
+  <div class="card-header">
+    <h3><i class="fas fa-{{ 'edit' if action=='edit' else 'user-plus' }}"></i>
+      {{ 'Edit Faculty Record' if action=='edit' else 'Add Faculty Member' }}</h3>
+  </div>
+  <div class="card-body">
+    <form method="POST">
+      <div class="form-group">
+        <label>Full Name *</label>
+        <input type="text" name="name" class="form-control"
+               value="{{ faculty.name if faculty else '' }}" required placeholder="Dr. / Prof. Full Name">
+      </div>
+      <div class="form-group">
+        <label>Email Address *</label>
+        <input type="email" name="email" class="form-control"
+               value="{{ faculty.email if faculty else '' }}"
+               pattern=".+@(kongu\.edu|kongu\.ac\.in)$"
+               title="Must end with @kongu.edu or @kongu.ac.in"
+               {% if action=='edit' %}readonly{% endif %}
+               required placeholder="faculty@kongu.edu or faculty@kongu.ac.in">
+        <small class="text-muted">
+          {% if action=='edit' %}
+            Email cannot be changed after creation.
+          {% else %}
+            Allowed domains: <code>@kongu.edu</code> or <code>@kongu.ac.in</code>
+          {% endif %}
+        </small>
+      </div>
+      <div class="form-group">
+        <label>Designation</label>
+        <input type="text" name="designation" class="form-control"
+               value="{{ faculty.designation if faculty and faculty.designation else '' }}"
+               placeholder="e.g. Assistant Professor">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label>Department *</label>
+          <select name="department_id" class="form-control" required>
+            {% for d in departments %}
+            <option value="{{ d.id }}"
+              {% if faculty and faculty.department_id == d.id %}selected{% endif %}>
+              {{ d.name }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Years of Experience</label>
+          <input type="number" name="years_of_experience" class="form-control"
+                 value="{{ faculty.years_of_experience if faculty else 0 }}"
+                 min="0" max="60">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Area of Expertise (comma-separated)</label>
+        <textarea name="area_of_expertise" class="form-control"
+                  placeholder="e.g. Machine Learning, Data Science, Neural Networks">{{ faculty.area_of_expertise if faculty and faculty.area_of_expertise else '' }}</textarea>
+        <small class="text-muted">Separate multiple areas with commas.</small>
+      </div>
+      <div class="flex gap-2 mt-2">
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-save"></i> {{ 'Update Faculty' if action=='edit' else 'Add Faculty' }}
+        </button>
+        <a href="{{ url_for('admin.faculty_list') }}" class="btn btn-outline" id="cancel">
+          <i class="fas fa-arrow-left"></i> Cancel
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

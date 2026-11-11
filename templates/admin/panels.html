@@ -1,0 +1,104 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Expert Panels{% endblock %}
+{% block page_title %}Expert Panels{% endblock %}
+{% block page_subtitle %}View finalized panels and download reports{% endblock %}
+
+{% block content %}
+<!-- Courses Ready to Finalize -->
+{% if ready_courses %}
+<div class="card mb-3" style="border-left:4px solid var(--success);">
+  <div class="card-header" style="background:#e8f5e9;">
+    <h3 style="color:var(--success);"><i class="fas fa-check-double"></i> Ready to Finalize</h3>
+  </div>
+  <div class="card-body" style="padding:16px 24px;">
+    {% for c in ready_courses %}
+    <div class="flex justify-between items-center" style="padding:10px 0;border-bottom:1px solid var(--border);">
+      <div>
+        <span class="font-bold">{{ c.name }}</span>
+        <span class="text-muted text-sm"> ({{ c.code }})</span>
+        <span class="badge badge-in-progress ml-2">All Accepted</span>
+      </div>
+      <form method="POST" action="{{ url_for('admin.finalize_panel', cid=c.id) }}"
+            onsubmit="return confirm('Finalize panel for {{ c.name }}?');">
+        <button type="submit" class="btn btn-success btn-sm">
+          <i class="fas fa-check"></i> Finalize Panel
+        </button>
+      </form>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Download All Reports -->
+{% if panels %}
+<div class="flex gap-2 mb-3">
+  <a href="{{ url_for('admin.report_all_pdf') }}" class="btn btn-danger">
+    <i class="fas fa-file-pdf"></i> Download All Panels (PDF)
+  </a>
+  <a href="{{ url_for('admin.report_excel') }}" class="btn btn-success">
+    <i class="fas fa-file-excel"></i> Export to Excel
+  </a>
+</div>
+{% endif %}
+
+<!-- Finalized Panels -->
+{% for panel in panels %}
+<div class="card mb-3">
+  <div class="card-header">
+    <div>
+      <h3><i class="fas fa-star"></i> {{ panel.course.name }}
+        <span class="text-muted text-sm"> ({{ panel.course.code }})</span>
+      </h3>
+      <p class="text-muted text-sm">
+        {{ panel.course.department.name }} &bull; {{ panel.course.semester or '' }}
+        &bull; Finalized on {{ panel.finalized_at.strftime('%d %b %Y') }}
+      </p>
+    </div>
+    <a href="{{ url_for('admin.report_pdf', pid=panel.id) }}" class="btn btn-danger btn-sm">
+      <i class="fas fa-file-pdf"></i> Download PDF
+    </a>
+  </div>
+  <div class="table-container">
+    <table class="data-table">
+      <thead>
+        <tr><th>#</th><th>Name</th><th>Department</th><th>Designation</th>
+            <th>Experience</th><th>Expertise</th><th>Role</th></tr>
+      </thead>
+      <tbody>
+        {% for m in panel.members %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td class="font-bold">{{ m.faculty.name }}</td>
+          <td>{{ m.faculty.department.name }}</td>
+          <td>{{ m.faculty.designation or '—' }}</td>
+          <td>{{ m.faculty.years_of_experience }} yrs</td>
+          <td>
+            <div class="tag-list">
+              {% for tag in m.faculty.expertise_list[:3] %}
+                <span class="tag">{{ tag }}</span>
+              {% endfor %}
+            </div>
+          </td>
+          <td><span class="badge badge-{{ m.role }}">{{ m.role }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="card">
+  <div class="card-body">
+    <div class="empty-state">
+      <div class="empty-icon">🏆</div>
+      <h3>No panels finalized yet</h3>
+      <p>Send invitations, wait for acceptances, then finalize panels here.</p>
+      <a href="{{ url_for('admin.manage_requests') }}" class="btn btn-primary mt-2">
+        <i class="fas fa-paper-plane"></i> Send Invitations
+      </a>
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,195 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Manage Requests{% endblock %}
+{% block page_title %}Panel Request Management{% endblock %}
+{% block page_subtitle %}Send invitations and track responses{% endblock %}
+
+{% block content %}
+<!-- Send Invitations Section -->
+<div class="card mb-3">
+  <div class="card-header">
+    <h3><i class="fas fa-paper-plane"></i> Send Panel Invitations</h3>
+  </div>
+  <div class="card-body">
+    <div class="form-group" style="max-width:400px;">
+      <label>Select Course</label>
+      <select id="courseSelect" class="form-control" onchange="loadFaculty(this.value)">
+        <option value="">-- Choose a Course --</option>
+        {% for c in courses %}
+        <option value="{{ c.id }}">{{ c.name }} ({{ c.code }}) — {{ c.department.short_code }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div id="inviteSection" style="display:none;">
+      <div id="courseInfoBanner"
+           style="background:#e8eaf6;border-radius:8px;padding:12px 18px;margin-bottom:18px;font-size:0.9rem;">
+      </div>
+      <form method="POST" action="{{ url_for('admin.send_requests') }}" id="inviteForm">
+        <input type="hidden" name="course_id" id="hiddenCourseId">
+        <div class="faculty-picker">
+          <!-- Internal Faculty (same department) -->
+          <div class="faculty-picker-section">
+            <h4>🏛️ Internal Faculty (4 required — same dept)</h4>
+            <div id="internalList"><p class="text-muted text-sm">Select a course first.</p></div>
+          </div>
+          <!-- External Faculty (other departments) -->
+          <div class="faculty-picker-section">
+            <h4>🌐 External Faculty (3 required — other depts)</h4>
+            <div id="externalList"><p class="text-muted text-sm">Select a course first.</p></div>
+          </div>
+        </div>
+        <div class="flex gap-2 mt-3">
+          <div id="selectionCount" class="text-sm text-muted" style="flex:1;line-height:2;">
+            Selected: <b id="internalCount">0</b>/4 internal, <b id="externalCount">0</b>/3 external
+          </div>
+          <button type="submit" class="btn btn-primary" id="sendBtn" disabled>
+            <i class="fas fa-paper-plane"></i> Send Invitations
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- All Requests Table -->
+<div class="card">
+  <div class="card-header">
+    <h3><i class="fas fa-list"></i> All Invitations</h3>
+  </div>
+  <div class="table-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th><th>Faculty</th><th>Dept</th><th>Course</th>
+          <th>Role</th><th>Status</th><th>Sent</th><th>Responded</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for req in all_requests %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td class="font-bold">{{ req.faculty.name }}</td>
+          <td class="text-sm">{{ req.faculty.department.short_code }}</td>
+          <td>{{ req.course.code }}</td>
+          <td><span class="badge badge-{{ req.role }}">{{ req.role }}</span></td>
+          <td><span class="badge badge-{{ req.status }}">{{ req.status }}</span></td>
+          <td class="text-sm text-muted">{{ req.sent_at.strftime('%d %b %Y') }}</td>
+          <td class="text-sm text-muted">
+            {{ req.responded_at.strftime('%d %b %Y') if req.responded_at else '—' }}
+          </td>
+          <td>
+            <div class="flex gap-2" style="align-items: center;">
+              {% if req.status in ['pending', 'email_failed'] %}
+              <a href="{{ url_for('faculty.respond_request', token=req.token) }}"
+                 target="_blank" class="btn btn-outline btn-sm" title="Open Faculty Response Link (Test/Direct Link)">
+                <i class="fas fa-external-link-alt"></i> Open Link
+              </a>
+              <form method="POST" action="{{ url_for('admin.remind_faculty', rid=req.id) }}">
+                <button type="submit" class="btn btn-warning btn-sm" title="Resend / Reminder">
+                  <i class="fas fa-bell"></i>
+                </button>
+              </form>
+              {% endif %}
+              {% if req.status == 'declined' %}
+              <a href="{{ url_for('admin.replace_faculty', rid=req.id) }}"
+                 class="btn btn-info btn-sm" title="Choose Replacement">
+                <i class="fas fa-sync-alt"></i> Replace
+              </a>
+              {% endif %}
+              {% if req.decline_reason %}
+              <button class="btn btn-outline btn-sm"
+                      onclick="alert('Reason: {{ req.decline_reason }}')" title="View Decline Reason">
+                <i class="fas fa-comment"></i>
+              </button>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="9">
+            <div class="empty-state">
+              <div class="empty-icon">📬</div>
+              <h3>No invitations sent yet</h3>
+              <p>Select a course above and send invitations to faculty.</p>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let internalMax = 4, externalMax = 3;
+
+async function loadFaculty(courseId) {
+  const section = document.getElementById('inviteSection');
+  if (!courseId) { section.style.display = 'none'; return; }
+
+  const res = await fetch(`/admin/api/faculty_for_course/${courseId}`);
+  const data = await res.json();
+  document.getElementById('hiddenCourseId').value = courseId;
+  document.getElementById('courseInfoBanner').innerHTML =
+    `<b>Course:</b> ${data.course.name} (${data.course.code}) &nbsp;|&nbsp;
+     <b>Department:</b> ${data.course.dept} &nbsp;|&nbsp;
+     Select 4 internal + 3 external faculty.`;
+
+  renderFacultyCards('internalList', data.internal, 'internal');
+  renderFacultyCards('externalList', data.external, 'external');
+  section.style.display = 'block';
+  updateCount();
+}
+
+function renderFacultyCards(containerId, list, role) {
+  const c = document.getElementById(containerId);
+  if (!list.length) {
+    c.innerHTML = '<p class="text-muted text-sm">No faculty available.</p>';
+    return;
+  }
+  c.innerHTML = list.map(f => `
+    <label class="faculty-card-pick" id="card-${role}-${f.id}" style="${f.is_max_reached ? 'opacity:0.65;cursor:not-allowed;background:#f9f9f9;border:1px dashed #ccc;' : ''}">
+      <input type="checkbox" name="${role}_ids[]" value="${f.id}"
+             ${f.is_max_reached ? 'disabled' : ''}
+             onchange="onCheck('${role}', this)">
+      <div style="flex:1;">
+        <div class="fcp-name" style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
+          <span>${f.name}</span>
+          ${f.is_max_reached 
+            ? `<span class="badge badge-warning" style="font-size:0.7rem;padding:2px 6px;">Max (2/2)</span>`
+            : `<span class="badge" style="font-size:0.7rem;padding:2px 6px;background:#eef2f7;color:#475569;">${f.assigned_count}/2 Courses</span>`
+          }
+        </div>
+        <div class="fcp-meta">
+          ${f.designation || ''} &bull; ${f.years_of_experience} yrs exp<br>
+          <i style="color:#888;font-size:0.75rem;">${(f.area_of_expertise || '').split(',').slice(0,2).join(', ')}</i>
+        </div>
+      </div>
+    </label>
+  `).join('');
+}
+
+function onCheck(role, checkbox) {
+  const max = role === 'internal' ? internalMax : externalMax;
+  const all = document.querySelectorAll(`input[name="${role}_ids[]"]:checked`);
+  if (all.length > max) {
+    checkbox.checked = false;
+    alert(`You can select at most ${max} ${role} faculty.`);
+    return;
+  }
+  checkbox.closest('.faculty-card-pick').classList.toggle('selected', checkbox.checked);
+  updateCount();
+}
+
+function updateCount() {
+  const ic = document.querySelectorAll('input[name="internal_ids[]"]:checked').length;
+  const ec = document.querySelectorAll('input[name="external_ids[]"]:checked').length;
+  document.getElementById('internalCount').textContent = ic;
+  document.getElementById('externalCount').textContent = ec;
+  document.getElementById('sendBtn').disabled = !(ic === internalMax && ec === externalMax);
+}
+</script>
+{% endblock %}

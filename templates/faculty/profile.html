@@ -1,0 +1,76 @@
+{% extends "faculty/base_faculty.html" %}
+{% block title %}My Profile{% endblock %}
+{% block page_title %}My Profile{% endblock %}
+{% block page_subtitle %}View and update your account{% endblock %}
+
+{% block content %}
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;">
+  <!-- Profile Card -->
+  <div class="card">
+    <div class="card-header"><h3><i class="fas fa-user-circle"></i> Profile Details</h3></div>
+    <div class="card-body">
+      <div style="text-align:center;margin-bottom:20px;">
+        <div class="user-avatar"
+             style="width:72px;height:72px;font-size:2rem;margin:0 auto 12px;background:var(--success);">
+          {{ faculty.name[0].upper() }}
+        </div>
+        <h2 style="font-size:1.2rem;">{{ faculty.name }}</h2>
+        <p class="text-muted text-sm">{{ faculty.designation or 'Faculty Member' }}</p>
+      </div>
+      <div class="info-grid" style="grid-template-columns:1fr;">
+        <div class="info-item">
+          <div class="info-label">Email</div>
+          <div class="info-value">{{ faculty.email }}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Department</div>
+          <div class="info-value">{{ faculty.department.name }}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Years of Experience</div>
+          <div class="info-value">{{ faculty.years_of_experience }} years</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Area of Expertise</div>
+          <div class="info-value">
+            <div class="tag-list mt-1">
+              {% for tag in faculty.expertise_list %}
+                <span class="tag">{{ tag }}</span>
+              {% else %}
+                <span class="text-muted">Not specified</span>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Change Password Card -->
+  <div class="card">
+    <div class="card-header"><h3><i class="fas fa-lock"></i> Change Password</h3></div>
+    <div class="card-body">
+      <form method="POST" action="{{ url_for('faculty.change_password') }}">
+        <div class="form-group">
+          <label>Current Password</label>
+          <input type="password" name="current_password" class="form-control" required
+                 placeholder="Enter current password">
+        </div>
+        <div class="form-group">
+          <label>New Password</label>
+          <input type="password" name="new_password" class="form-control" required
+                 placeholder="Min. 6 characters" minlength="6">
+        </div>
+        <div class="form-group">
+          <label>Confirm New Password</label>
+          <input type="password" name="confirm_password" class="form-control" required
+                 placeholder="Repeat new password">
+        </div>
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-save"></i> Update Password
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
